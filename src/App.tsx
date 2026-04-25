@@ -1,39 +1,58 @@
-import { useEffect, useState } from "react";
-import type { Schema } from "../amplify/data/resource";
-import { generateClient } from "aws-amplify/data";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { ThemeProvider, Alert, View } from "@aws-amplify/ui-react";
+import "@aws-amplify/ui-react/styles.css";
 
-const client = generateClient<Schema>();
+import AppShell from "./components/AppShell";
+import DashboardPage from "./pages/DashboardPage";
+import NewEventPage from "./pages/NewEventPage";
+import CalendarPage from "./pages/CalendarPage";
+import InvitationsPage from "./pages/InvitationsPage";
+import SettingsPage from "./pages/SettingsPage";
+import EventDetailPage from "./pages/EventDetailPage";
+import { theme } from "./theme";
+import { usePWA } from "./hooks/usePWA";
+import { useNetworkStatus } from "./hooks/useNetworkStatus";
 
 function App() {
-  const [todos, setTodos] = useState<Array<Schema["Todo"]["type"]>>([]);
-
-  useEffect(() => {
-    client.models.Todo.observeQuery().subscribe({
-      next: (data) => setTodos([...data.items]),
-    });
-  }, []);
-
-  function createTodo() {
-    client.models.Todo.create({ content: window.prompt("Todo content") });
-  }
+  const { offlineReady, needUpdate, updateServiceWorker, close } = usePWA();
+  const { isOffline } = useNetworkStatus();
 
   return (
-    <main>
-      <h1>My Event list</h1>
-      <button onClick={createTodo}>+ new</button>
-      <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>{todo.content}</li>
-        ))}
-      </ul>
-      <div>
-        🥳 App successfully hosted. Try creating a new todo.
-        <br />
-        <a href="https://docs.amplify.aws/react/start/quickstart/#make-frontend-updates">
-          Review next step of this tutorial.
-        </a>
-      </div>
-    </main>
+    <ThemeProvider theme={theme}>
+      <View>
+        {isOffline && (
+          <Alert variation="warning" isDismissible={false}>
+            Du bist offline. Daten werden aus dem Cache geladen.
+          </Alert>
+        )}
+        {(offlineReady || needUpdate) && (
+          <Alert 
+            variation="info" 
+            heading={offlineReady ? "App bereit für Offline-Nutzung" : "Neues Update verfügbar"}
+            hasIcon={true}
+            isDismissible={true}
+            onDismiss={close}
+          >
+            {needUpdate && (
+              <button onClick={() => updateServiceWorker(true)}>Aktualisieren</button>
+            )}
+          </Alert>
+        )}
+      </View>
+      
+      <BrowserRouter>
+        <AppShell>
+          <Routes>
+            <Route path="/" element={<DashboardPage />} />
+            <Route path="/events/new" element={<NewEventPage />} />
+            <Route path="/events/:id" element={<EventDetailPage />} />
+            <Route path="/calendar" element={<CalendarPage />} />
+            <Route path="/invitations" element={<InvitationsPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
+          </Routes>
+        </AppShell>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 }
 
