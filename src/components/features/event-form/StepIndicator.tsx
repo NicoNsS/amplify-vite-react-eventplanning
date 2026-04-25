@@ -18,13 +18,13 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ currentStep }) => 
       {steps.map((step, index) => (
         <React.Fragment key={step.label}>
           <Flex direction="column" alignItems="center">
-            <View 
+            <Flex 
               width="2.5rem" height="2.5rem" borderRadius="50%" 
               backgroundColor={currentStep >= step.threshold ? 'brand.primary.80' : 'font.tertiary'}
-              display="flex" alignItems="center" justifyContent="center" color="white"
+              alignItems="center" justifyContent="center" color="white"
             >
               {currentStep > step.threshold ? <Check size={18} /> : step.icon}
-            </View>
+            </Flex>
             <Text fontSize="xs" marginTop="0.25rem">{step.label}</Text>
           </Flex>
           {index < steps.length - 1 && (

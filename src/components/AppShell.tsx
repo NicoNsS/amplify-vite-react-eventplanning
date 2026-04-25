@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Flex, Heading, Button, View, Divider } from '@aws-amplify/ui-react';
-import { Menu, X, Home, Calendar, Mail, Settings } from 'lucide-react';
+import { Menu, X, Home, Calendar, Mail, Settings, HelpCircle } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useTour } from './TourProvider';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -11,6 +12,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { startTour } = useTour();
 
   const toggleDrawer = () => setIsDrawerOpen(!isDrawerOpen);
 
@@ -22,7 +24,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
   ];
 
   return (
-    <View minHeight="100vh" display="flex" flexDirection="column">
+    <Flex direction="column" minHeight="100vh">
       {/* Header */}
       <Flex
         as="header"
@@ -33,15 +35,24 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
         boxShadow="small"
         position="sticky"
         top="0"
-        zIndex={100}
+        style={{ zIndex: 100 }}
       >
-        <Flex alignItems="center">
+        <Flex alignItems="center" data-tour="logo">
           <Button onClick={toggleDrawer} variation="link" padding="0.5rem">
             <Menu />
           </Button>
           <Heading level={4} marginLeft="0.5rem">EventPlanner</Heading>
         </Flex>
         <Flex alignItems="center" gap="small">
+          <Button 
+            onClick={startTour} 
+            variation="link" 
+            padding="0.5rem"
+            data-tour="help"
+            ariaLabel="Hilfe Tour starten"
+          >
+            <HelpCircle />
+          </Button>
           {/* User info and sign out removed for POC */}
         </Flex>
       </Flex>
@@ -57,7 +68,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
             width="100vw"
             height="100vh"
             backgroundColor="rgba(0,0,0,0.5)"
-            zIndex={101}
+            style={{ zIndex: 101 }}
             onClick={toggleDrawer}
           />
         )}
@@ -70,10 +81,10 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
           width="280px"
           height="100vh"
           backgroundColor="white"
-          zIndex={102}
-          transition="left 0.3s ease-in-out"
+          style={{ zIndex: 102, transition: 'left 0.3s ease-in-out' }}
           boxShadow="large"
           padding="1rem"
+          data-tour="menu"
         >
           <Flex justifyContent="space-between" alignItems="center" marginBottom="2rem">
             <Heading level={4}>Menü</Heading>
@@ -82,7 +93,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
             </Button>
           </Flex>
 
-          <Flex flexDirection="column" gap="0.5rem">
+          <Flex direction="column" gap="0.5rem">
             {navItems.map((item) => (
               <Button
                 key={item.path}
@@ -108,7 +119,7 @@ const AppShell: React.FC<AppShellProps> = ({ children }) => {
           {children}
         </View>
       </Flex>
-    </View>
+    </Flex>
   );
 };
 

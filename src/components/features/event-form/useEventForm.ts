@@ -1,6 +1,8 @@
 import { useState } from 'react';
-import { Visibility } from '../../../types/event';
 import { eventService, CreateEventInput } from '../../../services/eventService';
+import { Logger } from '../../../utils/logger';
+
+const log = new Logger('EventForm');
 
 export interface EventFormData extends Omit<CreateEventInput, 'startTime' | 'endTime'> {
   startTime: string;
@@ -31,6 +33,8 @@ export function useEventForm(onSuccess?: () => void) {
   const prevStep = () => setStep(s => Math.max(s - 1, 1));
 
   const submit = async () => {
+    log.info('User submitted event form', { title: formData.title });
+    log.debug('Form payload', formData);
     setLoading(true);
     setError(null);
     try {
@@ -39,10 +43,12 @@ export function useEventForm(onSuccess?: () => void) {
         startTime: new Date(formData.startTime).toISOString(),
         endTime: new Date(formData.endTime).toISOString(),
       });
+      log.info('Event creation successful');
       setFormData(initialData);
       setStep(1);
       onSuccess?.();
     } catch (err: any) {
+      log.error('Failed to create event', { error: err.message });
       setError(err.message ?? 'Fehler beim Erstellen des Events.');
     } finally {
       setLoading(false);

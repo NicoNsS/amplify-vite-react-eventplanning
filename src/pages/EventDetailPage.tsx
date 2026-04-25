@@ -1,8 +1,15 @@
-import { Heading, View, Text, Card, Flex, Button, Loader, Alert } from "@aws-amplify/ui-react"; 
+import { Heading, View, Text, Card, Flex, Button, Loader, Alert, Tabs } from "@aws-amplify/ui-react"; 
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { Calendar, MapPin, Clock, ChevronLeft } from "lucide-react";
+import { Calendar, MapPin, Clock, ChevronLeft, Scan } from "lucide-react";
 import { eventService, EventModel } from "../services/eventService";
+import QRCodeGenerator from "../components/features/checkin/QRCodeGenerator";
+import QRScanner from "../components/features/checkin/QRScanner";
+import CommentSection from "../components/features/comments/CommentSection";
+import { invitationService, InvitationModel } from "../services/invitationService";
+import { Logger } from "../utils/logger";
+
+const log = new Logger('EventDetail');
 
 export default function EventDetailPage() { 
   const { id } = useParams<{ id: string }>();
@@ -10,14 +17,41 @@ export default function EventDetailPage() {
   const [event, setEvent] = useState<EventModel | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [invitation, setInvitation] = useState<InvitationModel | null>(null);
+  const [showScanner, setShowScanner] = useState(false);
 
   useEffect(() => {
     if (!id) return;
     
-    eventService.getEvent(id)
-      .then(setEvent)
-      .catch(err => setError(err.message))
-      .finally(() => setLoading(false));
+    const loadData = async () => {
+      log.info('Loading event details', { eventId: id });
+      try {
+        const ev = await eventService.getEvent(id);
+        setEvent(ev);
+
+        // Simulator: Lade oder erstelle eine Test-Einladung für den aktuellen User
+        const invitations = await invitationService.listInvitationsByEvent(id);
+        if (invitations.length > 0) {
+          setInvitation(invitations[0]);
+        } else {
+          log.debug('No invitation found, creating mock invitation');
+          // Erstelle eine Mock-Einladung für die Demo
+          const mockInv = await invitationService.createInvitation({
+            eventId: id,
+            inviteeEmail: 'test@example.com',
+            role: 'ATTENDEE'
+          });
+          setInvitation(mockInv);
+        }
+      } catch (err: any) {
+        log.error('Error loading event data', { error: err.message, eventId: id });
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
   }, [id]);
 
   if (loading) {
@@ -80,6 +114,52 @@ export default function EventDetailPage() {
           </View>
         </Flex>
       </Card>
+
+      <Tabs
+        marginTop="xl"
+        defaultValue="Details"
+        items={[
+          {
+            label: 'Details',
+            value: 'Details',
+            content: (
+              <View paddingTop="large">
+                <CommentSection eventId={event.id} />
+              </View>
+            ),
+          },
+          {
+            label: 'Check-In',
+            value: 'Check-In',
+            content: (
+              <View paddingTop="large" data-tour="qr-checkin">
+                <Flex direction="column" gap="medium">
+                  {invitation && (
+                    <QRCodeGenerator 
+                      invitationId={invitation.id} 
+                      eventName={event.title} 
+                    />
+                  )}
+                  
+                  <Button 
+                    onClick={() => setShowScanner(!showScanner)}
+                    variation="menu"
+                    gap="small"
+                  >
+                    <Scan size={20} /> {showScanner ? "Scanner schließen" : "Organisator: Gast einchecken"}
+                  </Button>
+
+                  {showScanner && (
+                    <Card variation="outlined" marginTop="medium">
+                      <QRScanner onSuccess={() => setShowScanner(false)} />
+                    </Card>
+                  )}
+                </Flex>
+              </View>
+            ),
+          },
+        ]}
+      />
     </View>
   );
 }

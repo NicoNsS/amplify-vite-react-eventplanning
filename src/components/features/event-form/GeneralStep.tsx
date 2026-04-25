@@ -14,7 +14,7 @@ const visibilityOptions: { label: string; value: Visibility }[] = [
 ];
 
 export const GeneralStep: React.FC<GeneralStepProps> = ({ data, onChange }) => (
-  <Grid gap="medium">
+  <Grid gap="medium" data-tour="event-form-basics">
     <TextField
       label="Titel *"
       value={data.title}

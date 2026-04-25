@@ -1,7 +1,9 @@
 import { generateClient } from 'aws-amplify/data';
 import type { Schema } from '../../amplify/data/resource';
+import { Logger } from '../utils/logger';
 
 const client = generateClient<Schema>();
+const log = new Logger('EventService');
 
 export type EventModel = Schema["Event"]["type"];
 
@@ -17,16 +19,26 @@ export interface CreateEventInput {
 
 export const eventService = {
   async listEvents(): Promise<EventModel[]> {
+    log.debug('Listing events');
     try {
+      if (!client.models.Event) {
+        log.warn("Model 'Event' not found. Please check amplify_outputs.json");
+        return [];
+      }
       const { data: events } = await client.models.Event.list();
+      log.info('Events listed', { count: events.length });
       return events;
-    } catch (error) {
-      console.error('Error listing events:', error);
+    } catch (error: any) {
+      log.error('Error listing events', { error: error.message });
       throw error;
     }
   },
 
   observeEvents(callback: (events: EventModel[]) => void) {
+    if (!client.models.Event) {
+      console.warn("Model 'Event' not found. Please check amplify_outputs.json");
+      return { unsubscribe: () => {} };
+    }
     return client.models.Event.observeQuery().subscribe({
       next: (data) => callback([...data.items]),
       error: (err) => console.error('ObserveQuery error:', err),
@@ -34,13 +46,18 @@ export const eventService = {
   },
 
   async createEvent(input: CreateEventInput): Promise<EventModel> {
+    log.debug('Creating event', { input });
     try {
+      if (!client.models.Event) {
+        throw new Error("Model 'Event' not found in configuration.");
+      }
       const { data: newEvent, errors } = await client.models.Event.create({
         ...input,
         createdBy: 'guest',
       });
 
       if (errors) {
+        log.error('GraphQL errors during event creation', { errors });
         throw new Error(errors[0].message);
       }
 
@@ -48,21 +65,33 @@ export const eventService = {
         throw new Error('Event could not be created');
       }
 
+      log.info('Event created', { eventId: newEvent.id });
       return newEvent;
-    } catch (error) {
-      console.error('Error creating event:', error);
+    } catch (error: any) {
+      log.error('Error creating event', { error: error.message, input });
       throw error;
     }
   },
 
   async getEvent(id: string): Promise<EventModel> {
+    log.debug('Getting event', { id });
     try {
+      if (!client.models.Event) {
+        throw new Error("Model 'Event' not found in configuration.");
+      }
       const { data: event, errors } = await client.models.Event.get({ id });
-      if (errors) throw new Error(errors[0].message);
-      if (!event) throw new Error('Event not found');
+      if (errors) {
+        log.error('GraphQL errors during get event', { id, errors });
+        throw new Error(errors[0].message);
+      }
+      if (!event) {
+        log.warn('Event not found', { id });
+        throw new Error('Event not found');
+      }
+      log.info('Event retrieved', { id });
       return event;
-    } catch (error) {
-      console.error(`Error getting event ${id}:`, error);
+    } catch (error: any) {
+      log.error(`Error getting event ${id}`, { error: error.message });
       throw error;
     }
   }

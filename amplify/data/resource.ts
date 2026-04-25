@@ -16,8 +16,43 @@ const schema = a.schema({
     timezone: a.string().required(),
     visibility: a.enum(['PUBLIC', 'PRIVATE']),
     createdBy: a.string().required(),
+    invitations: a.hasMany('Invitation', 'eventId'),
+    comments: a.hasMany('Comment', 'eventId'),
   }).authorization((allow) => [
     allow.publicApiKey()
+  ]),
+
+  Invitation: a.model({
+    eventId: a.id().required(),
+    event: a.belongsTo('Event', 'eventId'),
+    inviteeEmail: a.string().required(),
+    status: a.enum(['PENDING', 'ACCEPTED', 'DECLINED', 'ATTENDED']),
+    role: a.enum(['SPEAKER', 'VENDOR', 'VIP', 'ATTENDEE']),
+  }).authorization((allow) => [
+    allow.publicApiKey()
+  ]),
+
+  Comment: a.model({
+    eventId: a.id().required(),
+    event: a.belongsTo('Event', 'eventId'),
+    content: a.string().required(),
+    createdBy: a.string().required(),
+    reactions: a.json(), // Speichert Reaktionen als Objekt, z.B. {"like": 5, "heart": 3}
+  }).authorization((allow) => [
+    allow.publicApiKey()
+  ]),
+
+  AuditLog: a.model({
+    id: a.id().required(),
+    timestamp: a.datetime().required(),
+    userId: a.string().required(),
+    operation: a.string().required(),
+    input: a.json(),
+    result: a.json(),
+    error: a.string(),
+    sourceIP: a.string(),
+  }).authorization((allow) => [
+    allow.publicApiKey() // In Produktion sollte dies restriktiver sein
   ]),
 });
 

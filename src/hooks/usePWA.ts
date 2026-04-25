@@ -3,7 +3,7 @@ import { useRegisterSW } from 'virtual:pwa-register/react';
 export function usePWA() {
   const {
     offlineReady,
-    needUpdate,
+    needRefresh: needUpdate,
     updateServiceWorker,
   } = useRegisterSW() || {};
 

@@ -4,13 +4,20 @@ import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import type { Schema } from "../../amplify/data/resource";
 import { eventService } from "../services/eventService";
+import { Logger } from "../utils/logger";
+
+const log = new Logger('Dashboard');
 
 const DashboardPage = () => {
   const navigate = useNavigate();
   const [events, setEvents] = useState<Array<Schema["Event"]["type"]>>([]);
 
   useEffect(() => {
-    const sub = eventService.observeEvents(setEvents);
+    log.info('Dashboard rendered');
+    const sub = eventService.observeEvents((data) => {
+      log.debug('Events updated', { count: data.length });
+      setEvents(data);
+    });
     return () => sub.unsubscribe();
   }, []);
 
@@ -48,7 +55,7 @@ const DashboardPage = () => {
             </Card>
           ) : (
             <Collection
-              items={events}
+              items={events.filter(e => e.visibility === 'PRIVATE')}
               type="list"
               direction="column"
               gap="1rem"
@@ -65,7 +72,9 @@ const DashboardPage = () => {
                     <Flex alignItems="center" gap="xs" fontSize="small" color="font.tertiary">
                       <CalendarIcon size={14} />
                       <Text>{new Date(event.startTime).toLocaleDateString()}</Text>
-                      <Clock size={14} marginLeft="0.5rem" />
+                      <Flex marginLeft="0.5rem" alignItems="center">
+                        <Clock size={14} />
+                      </Flex>
                       <Text>{new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
                     </Flex>
                     {event.location && (
@@ -78,6 +87,44 @@ const DashboardPage = () => {
                 </Card>
               )}
             </Collection>
+          )}
+
+          <Heading level={3} marginBottom="1rem" marginTop="2rem">Öffentliche Events</Heading>
+          <Collection
+            items={events.filter(e => e.visibility === 'PUBLIC')}
+            type="list"
+            direction="column"
+            gap="1rem"
+          >
+            {(event) => (
+              <Card 
+                key={event.id} 
+                variation="elevated" 
+                onClick={() => navigate(`/events/${event.id}`)}
+                style={{ cursor: 'pointer' }}
+                backgroundColor="brand.primary.10"
+              >
+                <Flex direction="column" gap="xs">
+                  <Flex justifyContent="space-between">
+                    <Heading level={4}>{event.title}</Heading>
+                    <Text fontSize="small" color="brand.primary.80" fontWeight="bold">ÖFFENTLICH</Text>
+                  </Flex>
+                  <Flex alignItems="center" gap="xs" fontSize="small" color="font.tertiary">
+                    <CalendarIcon size={14} />
+                    <Text>{new Date(event.startTime).toLocaleDateString()}</Text>
+                  </Flex>
+                  {event.location && (
+                    <Flex alignItems="center" gap="xs" fontSize="small" color="font.tertiary">
+                      <MapPin size={14} />
+                      <Text>{event.location}</Text>
+                    </Flex>
+                  )}
+                </Flex>
+              </Card>
+            )}
+          </Collection>
+          {events.filter(e => e.visibility === 'PUBLIC').length === 0 && (
+            <Text variation="tertiary">Keine öffentlichen Events verfügbar.</Text>
           )}
         </View>
 
@@ -108,6 +155,7 @@ const DashboardPage = () => {
         onClick={() => navigate('/events/new')}
         boxShadow="large"
         ariaLabel="Event erstellen"
+        data-tour="fab"
       >
         <Plus size={28} />
       </Button>
