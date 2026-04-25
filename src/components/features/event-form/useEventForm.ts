@@ -1,0 +1,62 @@
+import { useState } from 'react';
+import { Visibility } from '../../../types/event';
+import { eventService, CreateEventInput } from '../../../services/eventService';
+
+export interface EventFormData extends Omit<CreateEventInput, 'startTime' | 'endTime'> {
+  startTime: string;
+  endTime: string;
+}
+
+const initialData: EventFormData = {
+  title: '',
+  description: '',
+  location: '',
+  startTime: '',
+  endTime: '',
+  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  visibility: 'PRIVATE',
+};
+
+export function useEventForm(onSuccess?: () => void) {
+  const [formData, setFormData] = useState<EventFormData>(initialData);
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const updateField = <K extends keyof EventFormData>(field: K, value: EventFormData[K]) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const nextStep = () => setStep(s => Math.min(s + 1, 3));
+  const prevStep = () => setStep(s => Math.max(s - 1, 1));
+
+  const submit = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      await eventService.createEvent({
+        ...formData,
+        startTime: new Date(formData.startTime).toISOString(),
+        endTime: new Date(formData.endTime).toISOString(),
+      });
+      setFormData(initialData);
+      setStep(1);
+      onSuccess?.();
+    } catch (err: any) {
+      setError(err.message ?? 'Fehler beim Erstellen des Events.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    formData,
+    step,
+    loading,
+    error,
+    updateField,
+    nextStep,
+    prevStep,
+    submit,
+  };
+}
