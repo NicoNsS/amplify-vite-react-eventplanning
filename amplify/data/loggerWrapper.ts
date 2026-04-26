@@ -1,5 +1,6 @@
 import { DynamoDB } from 'aws-sdk';
 import { v4 as uuidv4 } from 'uuid';
+import { errorHints } from './errorHints';
 
 // DynamoDB table name will be passed via environment variable
 const auditTable = process.env.AUDIT_LOG_TABLE!;
@@ -13,6 +14,7 @@ export interface AuditEntry {
   input: any;               // raw GraphQL args
   result?: any;             // success payload
   error?: string;           // error message
+  hint?: string;            // hint message
   sourceIP?: string;        // optional, from event.requestContext.identity
 }
 
@@ -57,7 +59,11 @@ export function withLogging(
 
       return result;
     } catch (err: any) {
+      const errorTag = err?.tag ?? err?.name;
+      const hint = errorTag ? errorHints[errorTag] : undefined;
+      
       audit.error = err.message;
+      audit.hint = hint;
       
       if (auditTable) {
         await db.put({ TableName: auditTable, Item: audit }).promise();
@@ -70,6 +76,8 @@ export function withLogging(
           userId,
           durationMs: Date.now() - start,
           error: err.message,
+          errorTag,
+          hint,
         })
       );
 

@@ -1,20 +1,29 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Button,
   Flex,
   Heading,
   Card,
   Alert,
+  View,
 } from '@aws-amplify/ui-react';
-import { ChevronRight, ChevronLeft } from 'lucide-react';
+import { ChevronRight, ChevronLeft, PartyPopper } from 'lucide-react';
 
 import { useEventForm } from './features/event-form/useEventForm';
 import { StepIndicator } from './features/event-form/StepIndicator';
 import { GeneralStep } from './features/event-form/GeneralStep';
 import { TimeLocationStep } from './features/event-form/TimeLocationStep';
 import { PreviewStep } from './features/event-form/PreviewStep';
+import { useTranslation } from '../hooks/useTranslation';
+import { useToast } from '../hooks/useToast';
+import { useNavigate } from 'react-router-dom';
 
 export const EventForm: React.FC = () => {
+  const { t } = useTranslation();
+  const { showToast } = useToast();
+  const navigate = useNavigate();
+  const [showBalloon, setShowBalloon] = useState(false);
+
   const {
     formData,
     step,
@@ -25,10 +34,23 @@ export const EventForm: React.FC = () => {
     prevStep,
     submit,
   } = useEventForm(() => {
-    // Optional: Redirect or show detailed success message
+    showToast(t('eventWizard.launchSuccess'), 'success');
+    setShowBalloon(true);
+    setTimeout(() => {
+      navigate('/');
+    }, 3000);
   });
 
   const isLastStep = step === 3;
+
+  const getStepTitle = () => {
+    switch (step) {
+      case 1: return t('eventWizard.step1Title');
+      case 2: return t('eventWizard.step2Title');
+      case 3: return t('eventWizard.step3Title');
+      default: return '';
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,8 +62,12 @@ export const EventForm: React.FC = () => {
   };
 
   return (
-    <Card variation="elevated" padding="large" maxWidth="600px" margin="0 auto">
-      <Heading level={3} marginBottom="1.5rem" textAlign="center">Neues Event</Heading>
+    <Card variation="elevated" padding="large" maxWidth="600px" margin="0 auto" style={{ position: 'relative' }}>
+      {showBalloon && <View className="balloon-fly">🎈</View>}
+      <Flex justifyContent="center" alignItems="center" marginBottom="1.5rem" gap="small">
+        <PartyPopper color="#FF6B6B" />
+        <Heading level={3} textAlign="center">{getStepTitle()}</Heading>
+      </Flex>
       
       <StepIndicator currentStep={step} />
 

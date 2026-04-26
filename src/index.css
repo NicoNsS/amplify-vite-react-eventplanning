@@ -61,3 +61,38 @@ a {
   font-weight: 800;
   text-decoration: none;
 }
+
+/* EventPlanner Character Styles */
+
+.amplify-button:hover {
+  transform: translateY(-2px);
+  transition: transform 0.2s ease-in-out, background-color 0.2s;
+}
+
+.amplify-alert--error {
+  animation: shake 0.5s cubic-bezier(.36,.07,.19,.97) both;
+}
+
+@keyframes shake {
+  10%, 90% { transform: translate3d(-1px, 0, 0); }
+  20%, 80% { transform: translate3d(2px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+.balloon-fly {
+  position: fixed;
+  bottom: -50px;
+  animation: flyUp 3s ease-in forwards;
+  font-size: 2rem;
+  z-index: 10000;
+}
+
+@keyframes flyUp {
+  0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(-120vh) rotate(20deg); opacity: 0; }
+}
+
+.progress-circle-to-check {
+  /* Animation für Loading -> Success */
+}

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { eventService, CreateEventInput } from '../../../services/eventService';
 import { Logger } from '../../../utils/logger';
+import { errorHints } from '../../../utils/errorHints';
 
 const log = new Logger('EventForm');
 
@@ -48,8 +49,10 @@ export function useEventForm(onSuccess?: () => void) {
       setStep(1);
       onSuccess?.();
     } catch (err: any) {
-      log.error('Failed to create event', { error: err.message });
-      setError(err.message ?? 'Fehler beim Erstellen des Events.');
+      const code = err?.code ?? err?.name ?? 'FormSubmitError';
+      const hint = errorHints[code];
+      log.error('Failed to create event', { error: err.message }, code);
+      setError(`${err.message}${hint ? ` – Hinweis: ${hint}` : ''}`);
     } finally {
       setLoading(false);
     }

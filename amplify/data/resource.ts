@@ -50,6 +50,7 @@ const schema = a.schema({
     input: a.json(),
     result: a.json(),
     error: a.string(),
+    hint: a.string(),
     sourceIP: a.string(),
   }).authorization((allow) => [
     allow.publicApiKey() // In Produktion sollte dies restriktiver sein

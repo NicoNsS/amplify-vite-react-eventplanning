@@ -1,16 +1,18 @@
 import { Heading, View, Text, Grid, Card, Flex, Button, Collection } from "@aws-amplify/ui-react";
-import { Plus, Calendar as CalendarIcon, MapPin, Clock } from "lucide-react";
+import { Plus, Calendar as CalendarIcon, MapPin, Clock, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState, useMemo } from "react";
 import type { Schema } from "../../amplify/data/resource";
 import { eventService } from "../services/eventService";
 import { Logger } from "../utils/logger";
 import { formatDate, formatTime } from "../utils/dateUtils";
+import { useTranslation } from "../hooks/useTranslation";
 
 const log = new Logger('Dashboard');
 
 const DashboardPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [events, setEvents] = useState<Array<Schema["Event"]["type"]>>([]);
 
   useEffect(() => {
@@ -34,17 +36,28 @@ const DashboardPage = () => {
         marginBottom="2rem"
         color="white"
         boxShadow="medium"
+        style={{ position: 'relative', overflow: 'hidden' }}
       >
-        <Heading level={1} color="white">Willkommen User!</Heading>
-        <Text fontSize="1.2rem">Plane dein nächstes großartiges Event.</Text>
+        <Heading level={1} color="white">{t('dashboard.heroTitle')}</Heading>
+        <Text fontSize="1.2rem">{t('dashboard.heroSubtitle')}</Text>
         <Button 
           marginTop="1.5rem" 
           backgroundColor="white" 
           color="brand.primary.80"
           onClick={() => navigate('/events/new')}
+          style={{ fontWeight: 'bold' }}
         >
-          Neues Event erstellen
+          {t('dashboard.createEvent')}
         </Button>
+        <View 
+          position="absolute" 
+          top="-10px" 
+          right="20px" 
+          fontSize="5rem" 
+          style={{ opacity: 0.1, pointerEvents: 'none' }}
+        >
+          🚀
+        </View>
       </View>
 
       <Grid
@@ -52,10 +65,13 @@ const DashboardPage = () => {
         gap="1.5rem"
       >
         <View>
-          <Heading level={3} marginBottom="1rem">Deine Events</Heading>
+          <Heading level={3} marginBottom="1rem">{t('dashboard.upcomingTitle')}</Heading>
           {privateEvents.length === 0 ? (
-            <Card variation="elevated">
-              <Text>Du hast noch keine Events erstellt.</Text>
+            <Card variation="elevated" padding="2rem" textAlign="center">
+              <Text fontSize="1.1rem" marginBottom="1rem">
+                {t('dashboard.emptyEvents')}
+              </Text>
+              <View fontSize="3rem">🎈</View>
             </Card>
           ) : (
             <Collection
@@ -93,7 +109,11 @@ const DashboardPage = () => {
             </Collection>
           )}
 
-          <Heading level={3} marginBottom="1rem" marginTop="2rem">Öffentliche Events</Heading>
+          <Flex alignItems="center" gap="small" marginTop="2rem" marginBottom="1rem">
+            <Heading level={3}>{t('dashboard.publicEventsTitle')}</Heading>
+            <Search size={20} color="#2F80ED" />
+          </Flex>
+          <Text variation="tertiary" marginBottom="1rem">{t('dashboard.publicEventsSubtitle')}</Text>
           {publicEvents.length === 0 ? (
             <Text variation="tertiary">Keine öffentlichen Events verfügbar.</Text>
           ) : (

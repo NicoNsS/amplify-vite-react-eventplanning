@@ -29,9 +29,10 @@ export const eventService = {
       const { data: events } = await client.models.Event.list();
       log.info('Events listed', { count: events.length });
       return events;
-    } catch (error: unknown) {
+    } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      log.error('Error listing events', { error: errorMessage });
+      const errorCode = error?.code ?? error?.name;
+      log.error('Error listing events', { error: errorMessage }, errorCode);
       throw error;
     }
   },
@@ -70,9 +71,10 @@ export const eventService = {
 
       log.info('Event created', { eventId: newEvent.id });
       return newEvent;
-    } catch (error: unknown) {
+    } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      log.error('Error creating event', { error: errorMessage, input });
+      const errorCode = error?.code ?? error?.name;
+      log.error('Error creating event', { error: errorMessage, input }, errorCode);
       throw error;
     }
   },
@@ -94,9 +96,10 @@ export const eventService = {
       }
       log.info('Event retrieved', { id });
       return event;
-    } catch (error: unknown) {
+    } catch (error: any) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      log.error(`Error getting event ${id}`, { error: errorMessage });
+      const errorCode = error?.code ?? error?.name;
+      log.error(`Error getting event ${id}`, { error: errorMessage }, errorCode);
       throw error;
     }
   }

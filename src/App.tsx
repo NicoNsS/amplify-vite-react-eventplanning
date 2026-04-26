@@ -4,6 +4,7 @@ import "@aws-amplify/ui-react/styles.css";
 import React, { Suspense, lazy } from "react";
 
 import { TourProvider } from "./components/TourProvider";
+import { ToastProvider } from "./hooks/useToast";
 import AppShell from "./components/AppShell";
 import { LoadingSpinner } from "./components/LoadingSpinner";
 import { theme } from "./theme";
@@ -46,20 +47,22 @@ function App() {
         </View>
         
         <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <TourProvider>
-            <AppShell>
-              <Suspense fallback={<LoadingSpinner fullPage />}>
-                <Routes>
-                  <Route path="/" element={<DashboardPage />} />
-                  <Route path="/events/new" element={<NewEventPage />} />
-                  <Route path="/events/:id" element={<EventDetailPage />} />
-                  <Route path="/calendar" element={<CalendarPage />} />
-                  <Route path="/invitations" element={<InvitationsPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
-                </Routes>
-              </Suspense>
-            </AppShell>
-          </TourProvider>
+          <ToastProvider>
+            <TourProvider>
+              <AppShell>
+                <Suspense fallback={<LoadingSpinner fullPage />}>
+                  <Routes>
+                    <Route path="/" element={<DashboardPage />} />
+                    <Route path="/events/new" element={<NewEventPage />} />
+                    <Route path="/events/:id" element={<EventDetailPage />} />
+                    <Route path="/calendar" element={<CalendarPage />} />
+                    <Route path="/invitations" element={<InvitationsPage />} />
+                    <Route path="/settings" element={<SettingsPage />} />
+                  </Routes>
+                </Suspense>
+              </AppShell>
+            </TourProvider>
+          </ToastProvider>
         </BrowserRouter>
       </>
     </ThemeProvider>

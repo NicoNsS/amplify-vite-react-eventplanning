@@ -86,4 +86,31 @@ describe('withLogging wrapper', () => {
       error: 'Handler failed'
     });
   });
+
+  it('should include hint in audit log and console when handler throws error with tag', async () => {
+    const error = new Error('Invalid date');
+    (error as any).tag = 'InvalidDateRange';
+    mockHandler.mockRejectedValueOnce(error);
+    const wrapped = withLogging(operationName, mockHandler);
+    const event = { arguments: { start: 'today', end: 'yesterday' } };
+
+    await expect(wrapped(event, {})).rejects.toThrow('Invalid date');
+
+    // Check if Audit Log contains hint
+    expect(mockPut).toHaveBeenCalledWith(expect.objectContaining({
+      Item: expect.objectContaining({
+        error: 'Invalid date',
+        hint: 'End‑Zeitpunkt liegt vor dem Start‑Zeitpunkt. Korrigiere das Datum im Formular.'
+      })
+    }));
+
+    // Check console error contains hint and tag
+    const consoleOutput = JSON.parse((console.error as any).mock.calls[0][0]);
+    expect(consoleOutput).toMatchObject({
+      level: 'ERROR',
+      error: 'Invalid date',
+      errorTag: 'InvalidDateRange',
+      hint: 'End‑Zeitpunkt liegt vor dem Start‑Zeitpunkt. Korrigiere das Datum im Formular.'
+    });
+  });
 });

@@ -1,4 +1,5 @@
 import { record } from 'aws-amplify/analytics';
+import { errorHints } from './errorHints';
 
 // -------------------------------------------------------------------
 // Log‑Level‑Enum (extensible)
@@ -22,8 +23,9 @@ export class Logger {
     this.requestId = crypto.randomUUID();
   }
 
-  private format(level: LogLevel, message: string, meta?: any) {
+  private format(level: LogLevel, message: string, meta?: any, errorCode?: string) {
     const ts = new Date().toISOString();
+    const hint = errorCode ? errorHints[errorCode] : undefined;
     return {
       timestamp: ts,
       level,
@@ -31,6 +33,8 @@ export class Logger {
       requestId: this.requestId,
       message,
       ...(meta ? { meta } : {}),
+      ...(errorCode ? { errorCode } : {}),
+      ...(hint ? { hint } : {}),
     };
   }
 
@@ -45,20 +49,25 @@ export class Logger {
   debug(msg: string, meta?: any) { this.log(LogLevel.DEBUG, msg, meta); }
   info (msg: string, meta?: any) { this.log(LogLevel.INFO,  msg, meta); }
   warn (msg: string, meta?: any) { this.log(LogLevel.WARN,  msg, meta); }
-  error(msg: string, meta?: any) { this.log(LogLevel.ERROR, msg, meta); }
+  error(msg: string, meta?: any, errorCode?: string) {
+    this.log(LogLevel.ERROR, msg, meta, errorCode);
+  }
 
   // ---- core log method -----------------------------------------------
-  private log(level: LogLevel, msg: string, meta?: any) {
-    const entry = this.format(level, msg, meta);
+  private log(level: LogLevel, msg: string, meta?: any, errorCode?: string) {
+    const entry = this.format(level, msg, meta, errorCode);
     this.output(entry);
     // forward *business* events to Pinpoint (only INFO & higher)
     if (level !== LogLevel.DEBUG) {
       try {
+        const hint = errorCode ? errorHints[errorCode] : undefined;
         record({
           name: `${this.context}:${level}`,
           attributes: {
             message: msg,
             requestId: this.requestId,
+            ...(errorCode ? { errorCode } : {}),
+            ...(hint ? { hint } : {}),
             ...(meta ? { meta: JSON.stringify(meta) } : {}),
           },
         });
