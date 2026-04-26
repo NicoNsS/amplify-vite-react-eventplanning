@@ -3,11 +3,14 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Calendar, MapPin, Clock, ChevronLeft, Scan } from "lucide-react";
 import { eventService, EventModel } from "../services/eventService";
+import { LoadingSpinner } from "../components/LoadingSpinner";
 import QRCodeGenerator from "../components/features/checkin/QRCodeGenerator";
 import QRScanner from "../components/features/checkin/QRScanner";
 import CommentSection from "../components/features/comments/CommentSection";
 import { invitationService, InvitationModel } from "../services/invitationService";
 import { Logger } from "../utils/logger";
+
+import { formatDate, formatTime } from "../utils/dateUtils";
 
 const log = new Logger('EventDetail');
 
@@ -55,11 +58,7 @@ export default function EventDetailPage() {
   }, [id]);
 
   if (loading) {
-    return (
-      <Flex justifyContent="center" padding="4rem">
-        <Loader size="large" />
-      </Flex>
-    );
+    return <LoadingSpinner fullPage label="Event-Details werden geladen..." />;
   }
 
   if (error || !event) {
@@ -88,14 +87,14 @@ export default function EventDetailPage() {
         <Flex direction="column" gap="medium">
           <Flex alignItems="center" gap="small">
             <Calendar size={20} color="gray" />
-            <Text>{new Date(event.startTime).toLocaleDateString()}</Text>
+            <Text>{formatDate(event.startTime)}</Text>
           </Flex>
 
           <Flex alignItems="center" gap="small">
             <Clock size={20} color="gray" />
             <Text>
-              {new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} - 
-              {new Date(event.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {formatTime(event.startTime)} - 
+              {formatTime(event.endTime)}
             </Text>
           </Flex>
 

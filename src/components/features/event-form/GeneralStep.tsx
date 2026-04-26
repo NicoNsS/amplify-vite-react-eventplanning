@@ -5,7 +5,7 @@ import { Visibility } from '../../../types/event';
 
 interface GeneralStepProps {
   data: EventFormData;
-  onChange: (field: keyof EventFormData, value: any) => void;
+  onChange: <K extends keyof EventFormData>(field: K, value: EventFormData[K]) => void;
 }
 
 const visibilityOptions: { label: string; value: Visibility }[] = [

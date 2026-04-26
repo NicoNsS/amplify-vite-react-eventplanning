@@ -1,4 +1,5 @@
 import { generateClient } from 'aws-amplify/data';
+import { authService } from './authService';
 import type { Schema } from '../../amplify/data/resource';
 import { Logger } from '../utils/logger';
 
@@ -51,9 +52,10 @@ export const eventService = {
       if (!client.models.Event) {
         throw new Error("Model 'Event' not found in configuration.");
       }
+      const userId = await authService.getUserId();
       const { data: newEvent, errors } = await client.models.Event.create({
         ...input,
-        createdBy: 'guest',
+        createdBy: userId,
       });
 
       if (errors) {

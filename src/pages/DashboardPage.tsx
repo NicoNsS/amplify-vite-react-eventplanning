@@ -1,10 +1,11 @@
 import { Heading, View, Text, Grid, Card, Flex, Button, Collection } from "@aws-amplify/ui-react";
 import { Plus, Calendar as CalendarIcon, MapPin, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import type { Schema } from "../../amplify/data/resource";
 import { eventService } from "../services/eventService";
 import { Logger } from "../utils/logger";
+import { formatDate, formatTime } from "../utils/dateUtils";
 
 const log = new Logger('Dashboard');
 
@@ -20,6 +21,9 @@ const DashboardPage = () => {
     });
     return () => sub.unsubscribe();
   }, []);
+
+  const privateEvents = useMemo(() => events.filter(e => e.visibility === 'PRIVATE'), [events]);
+  const publicEvents = useMemo(() => events.filter(e => e.visibility === 'PUBLIC'), [events]);
 
   return (
     <View padding="1rem">
@@ -49,13 +53,13 @@ const DashboardPage = () => {
       >
         <View>
           <Heading level={3} marginBottom="1rem">Deine Events</Heading>
-          {events.length === 0 ? (
+          {privateEvents.length === 0 ? (
             <Card variation="elevated">
               <Text>Du hast noch keine Events erstellt.</Text>
             </Card>
           ) : (
             <Collection
-              items={events.filter(e => e.visibility === 'PRIVATE')}
+              items={privateEvents}
               type="list"
               direction="column"
               gap="1rem"
@@ -71,11 +75,11 @@ const DashboardPage = () => {
                     <Heading level={4}>{event.title}</Heading>
                     <Flex alignItems="center" gap="xs" fontSize="small" color="font.tertiary">
                       <CalendarIcon size={14} />
-                      <Text>{new Date(event.startTime).toLocaleDateString()}</Text>
+                      <Text>{formatDate(event.startTime)}</Text>
                       <Flex marginLeft="0.5rem" alignItems="center">
                         <Clock size={14} />
                       </Flex>
-                      <Text>{new Date(event.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</Text>
+                      <Text>{formatTime(event.startTime)}</Text>
                     </Flex>
                     {event.location && (
                       <Flex alignItems="center" gap="xs" fontSize="small" color="font.tertiary">
@@ -90,41 +94,42 @@ const DashboardPage = () => {
           )}
 
           <Heading level={3} marginBottom="1rem" marginTop="2rem">Öffentliche Events</Heading>
-          <Collection
-            items={events.filter(e => e.visibility === 'PUBLIC')}
-            type="list"
-            direction="column"
-            gap="1rem"
-          >
-            {(event) => (
-              <Card 
-                key={event.id} 
-                variation="elevated" 
-                onClick={() => navigate(`/events/${event.id}`)}
-                style={{ cursor: 'pointer' }}
-                backgroundColor="brand.primary.10"
-              >
-                <Flex direction="column" gap="xs">
-                  <Flex justifyContent="space-between">
-                    <Heading level={4}>{event.title}</Heading>
-                    <Text fontSize="small" color="brand.primary.80" fontWeight="bold">ÖFFENTLICH</Text>
-                  </Flex>
-                  <Flex alignItems="center" gap="xs" fontSize="small" color="font.tertiary">
-                    <CalendarIcon size={14} />
-                    <Text>{new Date(event.startTime).toLocaleDateString()}</Text>
-                  </Flex>
-                  {event.location && (
-                    <Flex alignItems="center" gap="xs" fontSize="small" color="font.tertiary">
-                      <MapPin size={14} />
-                      <Text>{event.location}</Text>
-                    </Flex>
-                  )}
-                </Flex>
-              </Card>
-            )}
-          </Collection>
-          {events.filter(e => e.visibility === 'PUBLIC').length === 0 && (
+          {publicEvents.length === 0 ? (
             <Text variation="tertiary">Keine öffentlichen Events verfügbar.</Text>
+          ) : (
+            <Collection
+              items={publicEvents}
+              type="list"
+              direction="column"
+              gap="1rem"
+            >
+              {(event) => (
+                <Card 
+                  key={event.id} 
+                  variation="elevated" 
+                  onClick={() => navigate(`/events/${event.id}`)}
+                  style={{ cursor: 'pointer' }}
+                  backgroundColor="brand.primary.10"
+                >
+                  <Flex direction="column" gap="xs">
+                    <Flex justifyContent="space-between">
+                      <Heading level={4}>{event.title}</Heading>
+                      <Text fontSize="small" color="brand.primary.80" fontWeight="bold">ÖFFENTLICH</Text>
+                    </Flex>
+                    <Flex alignItems="center" gap="xs" fontSize="small" color="font.tertiary">
+                      <CalendarIcon size={14} />
+                      <Text>{formatDate(event.startTime)}</Text>
+                    </Flex>
+                    {event.location && (
+                      <Flex alignItems="center" gap="xs" fontSize="small" color="font.tertiary">
+                        <MapPin size={14} />
+                        <Text>{event.location}</Text>
+                      </Flex>
+                    )}
+                  </Flex>
+                </Card>
+              )}
+            </Collection>
           )}
         </View>
 

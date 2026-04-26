@@ -5,7 +5,7 @@ import TimeSuggestions from '../ai/TimeSuggestions';
 
 interface TimeLocationStepProps {
   data: EventFormData;
-  onChange: (field: keyof EventFormData, value: any) => void;
+  onChange: <K extends keyof EventFormData>(field: K, value: EventFormData[K]) => void;
 }
 
 export const TimeLocationStep: React.FC<TimeLocationStepProps> = ({ data, onChange }) => {

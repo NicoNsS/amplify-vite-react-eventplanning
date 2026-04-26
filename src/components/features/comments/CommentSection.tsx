@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { View, Heading, Flex, Text, TextField, Button, Card, Divider } from '@aws-amplify/ui-react';
 import { commentService, CommentModel } from '../../../services/commentService';
+import { authService } from '../../../services/authService';
+import { LoadingSpinner } from '../../LoadingSpinner';
 import { Heart, ThumbsUp, PartyPopper } from 'lucide-react';
+import { formatDateTime } from '../../../utils/dateUtils';
 
 interface CommentSectionProps {
   eventId: string;
@@ -32,10 +35,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({ eventId }) => {
     if (!newComment.trim()) return;
 
     try {
+      const userName = await authService.getUserName();
       const created = await commentService.createComment({
         eventId,
         content: newComment,
-        createdBy: 'Gast-Benutzer' // In einer echten App wäre dies der eingeloggte User
+        createdBy: userName
       });
       setComments([created, ...comments]);
       setNewComment('');
@@ -77,7 +81,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ eventId }) => {
       <Divider marginTop="large" marginBottom="large" />
 
       {isLoading ? (
-        <Text>Lädt...</Text>
+        <LoadingSpinner label="Kommentare werden geladen..." />
       ) : (
         <Flex direction="column" gap="medium">
           {comments.map((comment) => (
@@ -86,7 +90,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ eventId }) => {
                 <Flex justifyContent="space-between">
                   <Text fontWeight="bold">{comment.createdBy}</Text>
                   <Text variation="tertiary" fontSize="small">
-                    {new Date(comment.createdAt).toLocaleString()}
+                    {formatDateTime(comment.createdAt)}
                   </Text>
                 </Flex>
                 <Text>{comment.content}</Text>

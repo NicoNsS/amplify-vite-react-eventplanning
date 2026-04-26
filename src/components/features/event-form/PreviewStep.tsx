@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, Divider, Flex, Heading } from '@aws-amplify/ui-react';
 import { Calendar as CalendarIcon, MapPin, Globe } from 'lucide-react';
 import { EventFormData } from './useEventForm';
+import { formatDateTime } from '../../../utils/dateUtils';
 
 interface PreviewStepProps {
   data: EventFormData;
@@ -17,8 +18,8 @@ export const PreviewStep: React.FC<PreviewStepProps> = ({ data }) => (
         <View>
           <Text fontWeight="bold">Zeitraum</Text>
           <Text fontSize="small">
-            {data.startTime ? new Date(data.startTime).toLocaleString() : 'Nicht gesetzt'} - 
-            {data.endTime ? new Date(data.endTime).toLocaleString() : 'Nicht gesetzt'}
+            {data.startTime ? formatDateTime(data.startTime) : 'Nicht gesetzt'} - 
+            {data.endTime ? formatDateTime(data.endTime) : 'Nicht gesetzt'}
           </Text>
         </View>
       </Flex>
