@@ -14,7 +14,7 @@ export enum LogLevel {
 // Minimal Logger‑Klasse
 // -------------------------------------------------------------------
 export class Logger {
-  private readonly context: string; // z. B. "Dashboard", "EventForm"
+  private readonly context: string; // z. B. "Dashboard", "EventForm"
   private readonly requestId: string;
 
   constructor(context: string) {

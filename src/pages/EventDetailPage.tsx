@@ -1,4 +1,4 @@
-import { Heading, View, Text, Card, Flex, Button, Loader, Alert, Tabs } from "@aws-amplify/ui-react"; 
+import { Heading, View, Text, Card, Flex, Button, Alert, Tabs } from "@aws-amplify/ui-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { Calendar, MapPin, Clock, ChevronLeft, Scan } from "lucide-react";
@@ -14,7 +14,7 @@ import { formatDate, formatTime } from "../utils/dateUtils";
 
 const log = new Logger('EventDetail');
 
-export default function EventDetailPage() { 
+export default function EventDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [event, setEvent] = useState<EventModel | null>(null);
@@ -25,7 +25,7 @@ export default function EventDetailPage() {
 
   useEffect(() => {
     if (!id) return;
-    
+
     const loadData = async () => {
       log.info('Loading event details', { eventId: id });
       try {
@@ -46,9 +46,10 @@ export default function EventDetailPage() {
           });
           setInvitation(mockInv);
         }
-      } catch (err: any) {
-        log.error('Error loading event data', { error: err.message, eventId: id });
-        setError(err.message);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : String(err);
+        log.error('Error loading event data', { error: errorMessage, eventId: id });
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -72,9 +73,9 @@ export default function EventDetailPage() {
 
   return (
     <View padding="1rem">
-      <Button 
-        variation="link" 
-        onClick={() => navigate(-1)} 
+      <Button
+        variation="link"
+        onClick={() => navigate(-1)}
         marginBottom="1rem"
         gap="0.5rem"
       >
@@ -83,7 +84,7 @@ export default function EventDetailPage() {
 
       <Card variation="elevated">
         <Heading level={1} marginBottom="1.5rem">{event.title}</Heading>
-        
+
         <Flex direction="column" gap="medium">
           <Flex alignItems="center" gap="small">
             <Calendar size={20} color="gray" />
@@ -93,7 +94,7 @@ export default function EventDetailPage() {
           <Flex alignItems="center" gap="small">
             <Clock size={20} color="gray" />
             <Text>
-              {formatTime(event.startTime)} - 
+              {formatTime(event.startTime)} -
               {formatTime(event.endTime)}
             </Text>
           </Flex>
@@ -134,13 +135,13 @@ export default function EventDetailPage() {
               <View paddingTop="large" data-tour="qr-checkin">
                 <Flex direction="column" gap="medium">
                   {invitation && (
-                    <QRCodeGenerator 
-                      invitationId={invitation.id} 
-                      eventName={event.title} 
+                    <QRCodeGenerator
+                      invitationId={invitation.id}
+                      eventName={event.title}
                     />
                   )}
-                  
-                  <Button 
+
+                  <Button
                     onClick={() => setShowScanner(!showScanner)}
                     variation="menu"
                     gap="small"

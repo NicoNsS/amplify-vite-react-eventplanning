@@ -29,20 +29,21 @@ export const eventService = {
       const { data: events } = await client.models.Event.list();
       log.info('Events listed', { count: events.length });
       return events;
-    } catch (error: any) {
-      log.error('Error listing events', { error: error.message });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      log.error('Error listing events', { error: errorMessage });
       throw error;
     }
   },
 
   observeEvents(callback: (events: EventModel[]) => void) {
     if (!client.models.Event) {
-      console.warn("Model 'Event' not found. Please check amplify_outputs.json");
+      log.warn("Model 'Event' not found. Please check amplify_outputs.json");
       return { unsubscribe: () => {} };
     }
     return client.models.Event.observeQuery().subscribe({
       next: (data) => callback([...data.items]),
-      error: (err) => console.error('ObserveQuery error:', err),
+      error: (err) => log.error('ObserveQuery error:', { error: err }),
     });
   },
 
@@ -69,8 +70,9 @@ export const eventService = {
 
       log.info('Event created', { eventId: newEvent.id });
       return newEvent;
-    } catch (error: any) {
-      log.error('Error creating event', { error: error.message, input });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      log.error('Error creating event', { error: errorMessage, input });
       throw error;
     }
   },
@@ -92,8 +94,9 @@ export const eventService = {
       }
       log.info('Event retrieved', { id });
       return event;
-    } catch (error: any) {
-      log.error(`Error getting event ${id}`, { error: error.message });
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      log.error(`Error getting event ${id}`, { error: errorMessage });
       throw error;
     }
   }

@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { View, Heading, Flex, Text, TextField, Button, Card, Divider } from '@aws-amplify/ui-react';
 import { commentService, CommentModel } from '../../../services/commentService';
 import { authService } from '../../../services/authService';
 import { LoadingSpinner } from '../../LoadingSpinner';
 import { Heart, ThumbsUp, PartyPopper } from 'lucide-react';
 import { formatDateTime } from '../../../utils/dateUtils';
+import { Logger } from '../../../utils/logger';
+
+const log = new Logger('CommentSection');
 
 interface CommentSectionProps {
   eventId: string;
@@ -15,20 +18,20 @@ const CommentSection: React.FC<CommentSectionProps> = ({ eventId }) => {
   const [newComment, setNewComment] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    loadComments();
-  }, [eventId]);
-
-  const loadComments = async () => {
+  const loadComments = useCallback(async () => {
     try {
       const fetchedComments = await commentService.listCommentsByEvent(eventId);
       setComments(fetchedComments);
     } catch (error) {
-      console.error("Fehler beim Laden der Kommentare", error);
+      log.error("Fehler beim Laden der Kommentare", { error });
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [eventId]);
+
+  useEffect(() => {
+    loadComments();
+  }, [loadComments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,19 +44,19 @@ const CommentSection: React.FC<CommentSectionProps> = ({ eventId }) => {
         content: newComment,
         createdBy: userName
       });
-      setComments([created, ...comments]);
+      setComments(prev => [created, ...prev]);
       setNewComment('');
     } catch (error) {
-      console.error("Fehler beim Erstellen des Kommentars", error);
+      log.error("Fehler beim Erstellen des Kommentars", { error });
     }
   };
 
   const handleReaction = async (commentId: string, reaction: string) => {
     try {
       const updated = await commentService.addReaction(commentId, reaction);
-      setComments(comments.map(c => c.id === commentId ? updated : c));
+      setComments(prev => prev.map(c => c.id === commentId ? updated : c));
     } catch (error) {
-      console.error("Fehler beim Hinzufügen der Reaktion", error);
+      log.error("Fehler beim Hinzufügen der Reaktion", { error });
     }
   };
 
@@ -65,7 +68,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ eventId }) => {
   return (
     <View marginTop="xl">
       <Heading level={3}>Kommentare</Heading>
-      
+
       <form onSubmit={handleSubmit}>
         <Flex direction="column" gap="small" marginTop="medium">
           <TextField
@@ -95,22 +98,22 @@ const CommentSection: React.FC<CommentSectionProps> = ({ eventId }) => {
                 </Flex>
                 <Text>{comment.content}</Text>
                 <Flex gap="small" marginTop="small">
-                  <Button 
-                    size="small" 
+                  <Button
+                    size="small"
                     onClick={() => handleReaction(comment.id, 'like')}
                     gap="xs"
                   >
                     <ThumbsUp size={16} /> {getReactionCount(comment, 'like')}
                   </Button>
-                  <Button 
-                    size="small" 
+                  <Button
+                    size="small"
                     onClick={() => handleReaction(comment.id, 'heart')}
                     gap="xs"
                   >
                     <Heart size={16} color="red" /> {getReactionCount(comment, 'heart')}
                   </Button>
-                  <Button 
-                    size="small" 
+                  <Button
+                    size="small"
                     onClick={() => handleReaction(comment.id, 'party')}
                     gap="xs"
                   >

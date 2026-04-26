@@ -35,7 +35,7 @@ const DashboardPage = () => {
         color="white"
         boxShadow="medium"
       >
-        <Heading level={1} color="white">Willkommen!</Heading>
+        <Heading level={1} color="white">Willkommen User!</Heading>
         <Text fontSize="1.2rem">Plane dein nächstes großartiges Event.</Text>
         <Button 
           marginTop="1.5rem" 
